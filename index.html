@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Iframe + Console</title>
+<style>
+  body { font-family: Arial, sans-serif; margin: 20px; }
+  input[type="text"] { width: 80%; padding: 8px; font-size: 16px; }
+  button { padding: 8px 16px; font-size: 16px; }
+  iframe { width: 100%; height: 400px; border: 1px solid #ccc; margin-top: 10px; }
+  #consoleOutput {
+    background: #111;
+    color: #0f0;
+    font-family: monospace;
+    padding: 10px;
+    margin-top: 10px;
+    height: 200px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+  }
+</style>
+</head>
+<body>
+
+<h2>Afficher un site dans un iframe + console JS</h2>
+<input id="urlInput" type="text" placeholder="Entrez l'URL ici" />
+<button id="loadBtn">Charger</button>
+
+<iframe id="siteFrame" sandbox="allow-scripts allow-same-origin"></iframe>
+
+<h3>Console du site :</h3>
+<div id="consoleOutput">(Les logs JS du site s'afficheront ici)</div>
+
+<script>
+  const urlInput = document.getElementById('urlInput');
+  const loadBtn = document.getElementById('loadBtn');
+  const iframe = document.getElementById('siteFrame');
+  const consoleOutput = document.getElementById('consoleOutput');
+
+  loadBtn.onclick = () => {
+    const url = urlInput.value.trim();
+    if (!url) {
+      alert("Veuillez entrer une URL valide.");
+      return;
+    }
+
+    // Reset la console
+    consoleOutput.textContent = "(Chargement...)";
+
+    // Charger l'iframe
+    iframe.src = url;
+
+    // On essaie de capter la console du contenu si même origine
+    iframe.onload = () => {
+      try {
+        const iframeWindow = iframe.contentWindow;
+        if (!iframeWindow) throw new Error("Pas d'accès à l'iframe");
+
+        // Rediriger console.log de l'iframe vers notre consoleOutput
+        iframeWindow.console.log = function(...args) {
+          const msg = args.map(a => typeof a === "object" ? JSON.stringify(a) : a).join(" ");
+          consoleOutput.textContent += "\n" + msg;
+          consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        };
+        consoleOutput.textContent = "(Console redirigée, tapez console.log dans l'iframe pour voir ici)";
+      } catch(e) {
+        consoleOutput.textContent = "(Impossible d'accéder à la console du site à cause des restrictions de sécurité)";
+      }
+    }
+  };
+</script>
+
+</body>
+</html>
